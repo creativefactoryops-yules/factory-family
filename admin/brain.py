@@ -171,15 +171,20 @@ def route(q):
     return ["foreman"]  # default: the orchestrator triages
 
 
-def member_ask(member, soul, history, q):
-    """One member answers in their own voice via Gemini. Falls back to keyword."""
+def member_ask(member, soul, history, q, model_offset=0):
+    """One member answers in their own voice via Gemini.
+    Tries the full model chain; model_offset spreads parallel members
+    across different models so 7 simultaneous calls don't 429 one model."""
     key = gemini_key()
-    if key:
-        model = gemini_models()[0]
-        convo = "\n".join(history[-8:]) if history else ""
-        prompt = (f"{soul}\n\nYou are {member}, one of Yules's factory family. "
-                  f"Reply as {member} in 2-3 sentences, in your voice. "
-                  f"Recent chat:\n{convo}\n\nYules: {q}\n{member}:")
+    if not key:
+        return None
+    models = gemini_models()
+    models = models[model_offset:] + models[:model_offset]
+    convo = "\n".join(history[-8:]) if history else ""
+    prompt = (f"{soul}\n\nYou are {member}, one of Yules's factory family. "
+              f"Reply as {member} in 2-3 sentences, in your voice. "
+              f"Recent chat:\n{convo}\n\nYules: {q}\n{member}:")
+    for model in models:
         for wait in (1, 2, 4):
             url = (f"https://generativelanguage.googleapis.com/v1beta/models/"
                    f"{model}:generateContent?key={key}")
@@ -190,26 +195,26 @@ def member_ask(member, soul, history, q):
                 except (KeyError, IndexError, TypeError) as e:
                     print(f"[brain] {member}: bad response shape: {e}", flush=True)
                     break
-            elif err not in (429, 503):
-                print(f"[brain] {member}: gemini {model} failed: {err}", flush=True)
-                break
-            else:
-                print(f"[brain] {member}: gemini {model} got {err}, retrying in {wait}s", flush=True)
+            if err in (429, 503):
+                print(f"[brain] {member}: {model} got {err}, retry in {wait}s", flush=True)
                 time.sleep(wait)
                 continue
-    # offline fallback: short in-character shrug
+            print(f"[brain] {member}: {model} failed: {err}", flush=True)
+            break
     return None
 
 
 def team_ask(q, souls, history):
     """Route to the right members, gather replies. Returns [(member, reply)]."""
     members = route(q)
+    nmodels = max(len(gemini_models()), 1)
     out = []
-    def _one(m):
-        r = member_ask(m, souls.get(m, ""), history, q)
+    def _one(arg):
+        m, i = arg
+        r = member_ask(m, souls.get(m, ""), history, q, model_offset=i % nmodels)
         return (m, r)
     with ThreadPoolExecutor(max_workers=min(len(members), 7)) as ex:
-        for m, r in ex.map(_one, members):
+        for m, r in ex.map(_one, [(m, i) for i, m in enumerate(members)]):
             out.append((m, r or _offline_line(m, q)))
     return out
 
