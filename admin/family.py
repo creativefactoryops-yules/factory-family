@@ -133,6 +133,14 @@ class H(http.server.BaseHTTPRequestHandler):
             if os.path.exists(p):
                 return self._send(200, open(p).read(), "text/html")
             return self._send(404, "den not built yet", "text/plain")
+        if self.path.startswith("/img") and self.path.endswith(".js"):
+            name = os.path.basename(self.path)
+            p = os.path.realpath(os.path.join(BASE, "public", name))
+            if not p.startswith(os.path.realpath(os.path.join(BASE, "public")) + os.sep):
+                return self._send(404, "not found", "text/plain")
+            if os.path.exists(p):
+                return self._send(200, open(p).read(), "application/javascript")
+            return self._send(404, "not found", "text/plain")
         if self.path.startswith("/creatures/"):
             name = os.path.basename(self.path)
             if not (name.endswith(".webp") or name.endswith(".png")):
