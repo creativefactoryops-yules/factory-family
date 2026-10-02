@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The Greeter — an ND soul brain</title>
+<style>
+:root{--bg:#0d0f14;--ink:#e8e6df;--soft:#a9a79e;--accent:#7ee2a8;--card:#161a22;--line:#2a3140}
+*{box-sizing:border-box}body{background:var(--bg);color:var(--ink);
+ font-family:system-ui,-apple-system,sans-serif;margin:0;line-height:1.7;font-size:18px}
+.wrap{max-width:640px;margin:0 auto;padding:32px 20px 80px}
+h1{font-size:2em;margin:.2em 0}h1 .dot{color:var(--accent)}
+.sub{color:var(--soft);font-size:1.05em}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px;margin:18px 0}
+.rule{border-left:3px solid var(--accent);padding-left:14px;margin:14px 0;color:var(--soft)}
+#chat{display:flex;flex-direction:column;gap:10px;min-height:120px}
+.msg{padding:12px 16px;border-radius:12px;max-width:90%}
+.me{align-self:flex-end;background:#1d2b22}.them{align-self:flex-start;background:var(--card);border:1px solid var(--line)}
+.row{display:flex;gap:8px;margin-top:12px}
+input{flex:1;background:#0a0c10;color:var(--ink);border:1px solid var(--line);
+ border-radius:10px;padding:14px;font-size:16px}
+button{background:var(--accent);color:#0d0f14;border:0;border-radius:10px;
+ padding:14px 20px;font-size:16px;font-weight:700;cursor:pointer}
+.small{font-size:.85em;color:var(--soft)}
+.controls{margin:18px 0;display:flex;gap:16px;flex-wrap:wrap}
+.controls label{font-size:.9em;color:var(--soft);display:flex;gap:6px;align-items:center}
+</style></head><body><div class="wrap">
+<h1>The Greeter<span class="dot">.</span></h1>
+<p class="sub">A solo indie ND soul brain. Built neurodivergent-first: low overwhelm,
+explicit over implied, one thing at a time. Everyone enters the same door.</p>
+
+<div class="controls">
+<label><input type="checkbox" id="bigtext"> bigger text</label>
+<label><input type="checkbox" id="calm" checked> calm mode (no animation)</label>
+</div>
+
+<div class="card"><div id="chat"></div>
+<div class="row"><input id="in" placeholder="Say hello. Ask anything." autocomplete="off">
+<button id="send">send</button></div></div>
+
+<div class="card"><h3>How this place works</h3>
+<div class="rule">No stupid questions. If you're new, say so — you'll get the full tour, no judgment.</div>
+<div class="rule">One thing at a time. I'll never dump five steps on you at once.</div>
+<div class="rule">If I don't know, I say so. Then I offer to find out.</div>
+<div class="rule">This is a collaboration kingdom. Your ideas get a fair hearing here.</div></div>
+
+<p class="small">Part of the --force ./buildyou factory family. The Greeter is the public soul —
+the rest of the family works backstage, local-first, private by design.</p>
+</div>
+<script>
+const chat=document.getElementById('chat'),inp=document.getElementById('in');
+document.getElementById('bigtext').onchange=e=>document.body.style.fontSize=e.target.checked?'22px':'18px';
+document.getElementById('calm').onchange=e=>document.body.style.setProperty('--anim',e.target.checked?'none':'');
+function say(t,cls){const d=document.createElement('div');d.className='msg '+cls;d.textContent=t;chat.appendChild(d);chat.scrollIntoView({block:'end'});}
+const brain=[
+ [/^(hi|hello|hey|yo|sup)\b/i,"Hello, and welcome in. I'm the Greeter — the front door of this little kingdom. What's on your mind? One thing at a time, no rush."],
+ [/new here|just arrived|first time/i,"Wonderful — new faces are my favorite. Here's the tour in one line: this is a kind, ND-first corner of the internet. Ask me anything, build with me, or just look around. What brings you here today?"],
+ [/who (are|r) you|your name/i,"I'm the Greeter, one soul in the --force ./buildyou factory family. My whole job is making sure everyone who walks through this door feels welcome and un-lost."],
+ [/nd|neurodivergent|adhd|autis/i,"This place was built ND-first, not ND-accommodated. That means: low overwhelm, explicit over implied, one step at a time, no assumed knowledge, no shame for asking. If something here ever feels otherwise, tell me and I'll fix the wording."],
+ [/accessib/i,"Accessibility here isn't a feature list — it's the foundation. Bigger text toggle up top, calm mode, plain language, no time pressure. Tell me what you need and I'll adapt."],
+ [/build|make|create|project/i,"Love that energy. Tell me what you want to make — just the rough shape is fine — and we'll break it into small steps together. First step only, then the next."],
+ [/thank|thanks|thx/i,"Anytime. That's literally what I'm here for."],
+ [/bye|goodbye|see you/i,"See you soon. The door stays open."],
+];
+function reply(q){
+ q=q.trim(); if(!q)return;
+ for(const [re,a] of brain){if(re.test(q))return a;}
+ return "Good question — I don't have a real answer for that yet, and I'd rather say so than fake one. Want to tell me more about what you're after? We'll figure it out together.";
+}
+async function go(){const q=inp.value;inp.value='';if(!q.trim())return;say(q,'me');
+ try{
+  const r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},
+   body:JSON.stringify({text:q}),signal:AbortSignal.timeout(70000)});
+  if(r.ok){const d=await r.json();say(d.answer,'them');return;}
+ }catch(e){/* backend not running — local brain takes over */}
+ setTimeout(()=>say(reply(q),'them'),400);}
+document.getElementById('send').onclick=go;
+inp.onkeydown=e=>{if(e.key==='Enter')go();};
+say("Hi. I'm the Greeter. This is a calm, kind, ND-first space — ask me anything, or just say hi.",'them');
+</script></body></html>
