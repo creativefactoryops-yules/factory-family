@@ -18,6 +18,8 @@ SOULS = os.path.join(BASE, "souls")
 DB = os.path.join(HOME, ".factory", "family.db")
 PORT = 8471
 
+CHAT_HIST = []
+
 MEMBERS = ["wick", "foreman", "archivist", "scout", "tinker", "guardian", "greeter"]
 
 def db():
@@ -121,14 +123,14 @@ class H(http.server.BaseHTTPRequestHandler):
         self.wfile.write(b)
 
     def do_GET(self):
-        if self.path == "/floor":
+        if self.path == "/":
             return self._send(200, ADMIN_HTML, "text/html")
         if self.path == "/greeter":
             p = os.path.join(BASE, "public", "greeter.html")
             if os.path.exists(p):
                 return self._send(200, open(p).read(), "text/html")
             return self._send(404, "greeter not built yet", "text/plain")
-        if self.path in ("/", "/den"):
+        if self.path == "/den":
             p = os.path.join(BASE, "public", "den.html")
             if os.path.exists(p):
                 html = open(p).read()
@@ -203,13 +205,21 @@ class H(http.server.BaseHTTPRequestHandler):
         if self.path == "/api/chat":
             q = data.get("text", data.get("q", "")).strip()
             if not q:
-                return self._send(200, json.dumps({"answer": "Say something first — I'm listening.", "layer": "none"}))
-            if brain_ask:
-                answer, layer = brain_ask(q)
-            else:
-                answer, layer = "The brain isn't wired up yet.", "none"
-            log("greeter", f"chat:{layer}", q[:120])
-            return self._send(200, json.dumps({"answer": answer, "reply": answer, "layer": layer}))
+                return self._send(200, json.dumps({"replies": [["greeter", "Say something first — I'm listening."]], "layer": "none"}))
+            souls = {m: read_soul(m) for m in MEMBERS}
+            hist = CHAT_HIST[-10:]
+            try:
+                import brain as _b
+                replies = _b.team_ask(q, souls, hist)
+                layer = "gemini" if _b.gemini_key() else "local"
+            except Exception:
+                replies = [("greeter", "The brain isn't wired up yet.")]
+                layer = "none"
+            CHAT_HIST.append(f"Yules: {q}")
+            for m, r in replies:
+                CHAT_HIST.append(f"{m}: {r[:200]}")
+                log(m, f"chat:{layer}", q[:120])
+            return self._send(200, json.dumps({"replies": replies, "layer": layer}))
         if self.path == "/api/tinker/deploy":
             # Tinker: deploy straight from the family floor.
             # {target: "netlify"|"github", site|repo, src}
@@ -234,63 +244,110 @@ class H(http.server.BaseHTTPRequestHandler):
 
 ADMIN_HTML = """<!DOCTYPE html><html><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Factory Floor — Admin</title>
+<title>❯ y_ · factory floor</title>
 <style>
-body{background:#0a0a0a;color:#33ff66;font-family:monospace;max-width:900px;margin:0 auto;padding:20px}
-h1{font-size:1.4em} .card{border:1px solid #1f5c2e;padding:12px;margin:10px 0;border-radius:6px}
-.mname{color:#9f9;font-weight:bold} pre{white-space:pre-wrap;color:#8a8;font-size:.85em}
-.logline{border-bottom:1px dotted #1f5c2e;padding:4px 0;font-size:.85em}
-input,button{background:#111;color:#3f6;border:1px solid #1f5c2e;padding:8px;font-family:monospace;border-radius:4px}
+:root{--grn:#33ff66;--dim:#1f5c2e;--amb:#ffb347;--txt:#c9e8c9}
+body{background:#070707;color:var(--grn);font-family:ui-monospace,Menlo,monospace;max-width:860px;margin:0 auto;padding:16px;font-size:15px}
+h1{font-size:1.25em;margin:.4em 0}.sub{color:#6a8a6a;font-size:.85em}
+#beat{color:var(--amb);font-size:.85em;margin:8px 0}
+.card{border:1px solid var(--dim);padding:10px 12px;margin:8px 0;border-radius:6px;background:#0b0f0b}
+.sec{color:var(--amb);margin:1.2em 0 .4em;font-weight:bold}
+#chat{height:46vh;min-height:280px;overflow-y:auto;border:1px solid var(--dim);border-radius:6px;padding:10px;background:#050705}
+#chat .sys{color:#5a7a5a;font-style:italic}
+#chat .you{color:#fff;margin:8px 0}
+#chat .you b{color:var(--amb)}
+#chat .msg{margin:8px 0}
+#chat .msg b{color:var(--grn)}
+#chat .typing{color:#5a7a5a;animation:blink 1s infinite}
+@keyframes blink{50%{opacity:.3}}
+.row{display:flex;gap:8px;margin-top:8px}
+#qin{flex:1;background:#0b0f0b;color:var(--txt);border:1px solid var(--dim);padding:10px;font-family:inherit;font-size:1em;border-radius:6px}
+button{background:#0e1a0e;color:var(--grn);border:1px solid var(--dim);padding:10px 16px;font-family:inherit;border-radius:6px;cursor:pointer;font-size:1em}
+button:active{background:#1a2e1a}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.chips button{padding:4px 10px;font-size:.8em}
+.logline{border-bottom:1px dotted var(--dim);padding:3px 0;font-size:.82em;color:#8acb8a}
+pre{white-space:pre-wrap;color:#8acb8a;font-size:.82em}
+details{margin:8px 0}summary{cursor:pointer;color:var(--amb)}
+.note{width:100%;box-sizing:border-box;background:#0b0f0b;color:var(--txt);border:1px solid var(--dim);padding:8px;font-family:inherit;border-radius:6px}
 </style></head><body>
-<h1>❯ y_ · factory floor — admin</h1>
-<p>local only. the family, the souls, the log.</p>
-<script src="/img1.js"></script>
-<script src="/img2.js"></script>
-<script src="/img3.js"></script>
-<script src="/img4.js"></script>
-<script src="/img5.js"></script>
-<script src="/img6.js"></script>
-<h2>members</h2><div id="members"></div>
-<h2>log</h2><div id="log"></div>
-<h2>tinker — ship it</h2>
+<h1>\u276f y_ \u00b7 factory floor</h1>
+<p class="sub">local only \u00b7 the family, live \u00b7 <a href="/den" style="color:var(--amb)">the den</a></p>
+<div id="beat">\u276f connecting\u2026</div>
+
+<div class="sec">\u276f talk to the team</div>
+<div class="chips">
+<button onclick="ask('@foreman ')">@foreman</button>
+<button onclick="ask('@tinker ')">@tinker</button>
+<button onclick="ask('@scout ')">@scout</button>
+<button onclick="ask('@archivist ')">@archivist</button>
+<button onclick="ask('@guardian ')">@guardian</button>
+<button onclick="ask('@wick ')">@wick</button>
+<button onclick="ask('hey everyone, ')">@everyone</button>
+</div>
+<div id="chat"><div class="sys">\u276f floor online. type @name to talk to someone, or @everyone for the whole team.</div></div>
+<div class="row"><input id="qin" placeholder="say something to the family\u2026" autocomplete="off"><button onclick="send()">send</button></div>
+
+<div class="sec">\u276f the roster</div>
+<div id="members"></div>
+
+<details><summary>\u276f heartbeat log</summary><div id="log"></div></details>
+
+<div class="sec">\u276f tinker \u2014 ship it</div>
 <div class="card">
-<select id="dtarget"><option value="netlify">netlify</option><option value="github">github</option></select>
-<input id="dname" placeholder="site name (netlify) or owner/repo (github)" style="width:40%">
-<input id="dsrc" placeholder="path from home, e.g. family/public/den.html" style="width:35%">
+<select id="dtarget" style="background:#111;color:#3f6;border:1px solid var(--dim);padding:8px;font-family:inherit;border-radius:4px"><option value="netlify">netlify</option><option value="github">github</option></select>
+<input id="dname" placeholder="site or owner/repo" class="note" style="width:38%">
+<input id="dsrc" placeholder="path from home" class="note" style="width:38%">
 <button onclick="deploy()">deploy</button>
 <div id="dout" style="margin-top:8px;font-size:.85em"></div></div>
-<h2>note</h2>
-<input id="note" placeholder="write to the family log…" style="width:70%">
-<button onclick="sendNote()">log it</button>
+
+<div class="sec">\u276f note to the log</div>
+<div class="row"><input id="note" class="note" placeholder="write to the family log\u2026"><button onclick="sendNote()">log it</button></div>
+
 <script>
-async function load(){
+const chat=document.getElementById('chat'),qin=document.getElementById('qin');
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;');}
+function add(html){chat.innerHTML+=html;chat.scrollTop=chat.scrollHeight;}
+function ask(prefix){qin.value=prefix;qin.focus();}
+qin.addEventListener('keydown',e=>{if(e.key==='Enter')send();});
+let busy=false;
+async function send(){
+ const q=qin.value.trim();if(!q||busy)return;busy=true;qin.value='';
+ add('<div class="you"><b>yules:</b> '+esc(q)+'</div>');
+ add('<div class="typing" id="ty">\u276f the team is thinking\u2026</div>');
+ try{
+  const r=await(await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:q})})).json();
+  document.getElementById('ty').remove();
+  (r.replies||[]).forEach(([m,t])=>add('<div class="msg"><b>'+esc(m)+':</b> '+esc(t)+'</div>'));
+ }catch(e){const t=document.getElementById('ty');if(t)t.remove();add('<div class="sys">\u276f static. the floor is quiet \u2014 try again.</div>');}
+ busy=false;loadLog();
+}
+async function beat(){
+ try{const b=await(await fetch('/api/heartbeat')).json();
+  document.getElementById('beat').textContent='\u276f floor is '+(b.ok?'live':'down')+' \u00b7 brain: '+b.brain+' \u00b7 '+b.ts;}catch(e){}
+}
+async function loadMembers(){
  const m=await(await fetch('/api/members')).json();
- document.getElementById('members').innerHTML=m.map(x=>{
-  const img=(window.FAMIMG&&window.FAMIMG[x.name])?`<img src="${window.FAMIMG[x.name]}" alt="${x.name}" style="width:72px;float:right;margin:0 0 8px 12px;filter:drop-shadow(0 4px 10px rgba(0,0,0,.5))">`:'';
-  return `<div class="card"><span class="mname">${x.name}</span>${img}<pre>${x.soul}</pre><div style="clear:both"></div></div>`;
- }).join('');
+ document.getElementById('members').innerHTML=m.map(x=>'<div class="card"><b style="color:var(--grn)">'+esc(x.name)+'</b><pre>'+esc(x.soul.slice(0,300))+'</pre></div>').join('');
+}
+async function loadLog(){
  const l=await(await fetch('/api/log')).json();
- document.getElementById('log').innerHTML=l.map(x=>
-  `<div class="logline">[${x.ts}] <b>${x.member}</b> (${x.kind}): ${x.text}</div>`).join('')||'<p>quiet on the floor.</p>';
+ document.getElementById('log').innerHTML=l.slice(-30).reverse().map(x=>'<div class="logline">['+x.ts+'] <b>'+x.member+'</b> ('+x.kind+'): '+esc(x.text)+'</div>').join('')||'<p>quiet on the floor.</p>';
 }
 async function sendNote(){
- const t=document.getElementById('note').value; if(!t)return;
- await fetch('/api/note',{method:'POST',headers:{'Content-Type':'application/json'},
-  body:JSON.stringify({member:'yules',text:t})});
- document.getElementById('note').value=''; load();
+ const t=document.getElementById('note').value;if(!t)return;
+ await fetch('/api/note',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({member:'yules',text:t})});
+ document.getElementById('note').value='';loadLog();
 }
 async function deploy(){
  const t=document.getElementById('dtarget').value;
- const payload={target:t,src:document.getElementById('dsrc').value};
- if(t==='netlify')payload.site=document.getElementById('dname').value;
- else payload.repo=document.getElementById('dname').value;
- document.getElementById('dout').textContent='tinker is working…';
- const r=await(await fetch('/api/tinker/deploy',{method:'POST',
-  headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})).json();
- document.getElementById('dout').textContent=(r.ok?'shipped: ':'failed: ')+r.message;
- load();
+ const p={target:t,src:document.getElementById('dsrc').value};
+ if(t==='netlify')p.site=document.getElementById('dname').value;else p.repo=document.getElementById('dname').value;
+ document.getElementById('dout').textContent='tinker is working\u2026';
+ const r=await(await fetch('/api/tinker/deploy',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)})).json();
+ document.getElementById('dout').textContent=JSON.stringify(r).slice(0,300);loadLog();
 }
-load(); setInterval(load,15000);
+beat();setInterval(beat,15000);loadMembers();loadLog();
 </script></body></html>"""
 
 if __name__ == "__main__":

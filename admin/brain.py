@@ -139,3 +139,85 @@ def ask(q):
         except Exception:
             continue
     return keyword_ask(q), "keyword"
+
+
+# ---------- team chat ----------
+from concurrent.futures import ThreadPoolExecutor
+
+ROUTER = [
+    ("tinker",    r"deploy|build|ship|netlify|vercel|github|push|site|app\b"),
+    ("archivist", r"remember|recall|memory|log|note|history|earlier|before"),
+    ("scout",     r"research|find out|verify|check|look up|search|is it true"),
+    ("guardian",  r"safe|privacy|private|secur|leak|expos|permission"),
+    ("foreman",   r"plan|organiz|steps|project|task|assign|status|stuck"),
+    ("wick",      r"wick"),
+    ("greeter",   r"^(hi|hello|hey|yo|sup)\b"),
+]
+
+def route(q):
+    """Who should answer? Returns list of member names."""
+    ql = q.lower()
+    # explicit @-mentions win
+    mentioned = [m for m in ("wick foreman archivist scout tinker guardian greeter".split())
+                 if "@" + m in ql]
+    if mentioned:
+        return mentioned
+    # "everyone / all of you / each of you" -> the whole team
+    if re.search(r"\b(everyone|all of you|each of you|whole team|everybody)\b", ql):
+        return ["wick", "foreman", "archivist", "scout", "tinker", "guardian", "greeter"]
+    for member, pat in ROUTER:
+        if re.search(pat, ql):
+            return [member]
+    return ["foreman"]  # default: the orchestrator triages
+
+
+def member_ask(member, soul, history, q):
+    """One member answers in their own voice via Gemini. Falls back to keyword."""
+    key = gemini_key()
+    if key:
+        model = gemini_models()[0]
+        convo = "\n".join(history[-8:]) if history else ""
+        prompt = (f"{soul}\n\nYou are {member}, one of Yules's factory family. "
+                  f"Reply as {member} in 2-3 sentences, in your voice. "
+                  f"Recent chat:\n{convo}\n\nYules: {q}\n{member}:")
+        for wait in (1, 2, 4):
+            url = (f"https://generativelanguage.googleapis.com/v1beta/models/"
+                   f"{model}:generateContent?key={key}")
+            data, err = _post(url, {"contents": [{"parts": [{"text": prompt}]}]})
+            if data:
+                try:
+                    return data["candidates"][0]["content"]["parts"][0]["text"].strip()
+                except (KeyError, IndexError, TypeError):
+                    break
+            if err in (429, 503):
+                time.sleep(wait)
+                continue
+            break
+    # offline fallback: short in-character shrug
+    return None
+
+
+def team_ask(q, souls, history):
+    """Route to the right members, gather replies. Returns [(member, reply)]."""
+    members = route(q)
+    out = []
+    def _one(m):
+        r = member_ask(m, souls.get(m, ""), history, q)
+        return (m, r)
+    with ThreadPoolExecutor(max_workers=min(len(members), 7)) as ex:
+        for m, r in ex.map(_one, members):
+            out.append((m, r or _offline_line(m, q)))
+    return out
+
+
+def _offline_line(member, q):
+    lines = {
+        "wick": "I'm here. The brain's offline but I'm listening — say it again when we're back?",
+        "foreman": "Noted. I'll pick this up the moment the brain's back online.",
+        "archivist": "I'll log this for later — nothing gets lost.",
+        "scout": "I'll dig into that as soon as I can reach the outside.",
+        "tinker": "On the bench. I'll build it when the brain's back.",
+        "guardian": "Staying watchful. Nothing leaves this room.",
+        "greeter": "Hey — I'm here, just running on backup power right now.",
+    }
+    return lines.get(member, "Here.")
