@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>❯ y_ · the den</title>
+<style>
+:root{--bg:#070907;--ink:#d7e4d7;--dim:#7a8a7a;--grn:#33ff66;--card:#0c0f0c;--line:#1c2b1c}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);margin:0;line-height:1.5;
+ font-family:system-ui,-apple-system,sans-serif;font-size:15px;
+ background-image:radial-gradient(ellipse at 50% -10%, rgba(51,255,102,.07), transparent 60%)}
+.wrap{max-width:900px;margin:0 auto;padding:20px 12px 60px;text-align:center}
+.brand{font-family:ui-monospace,Menlo,monospace;color:var(--grn);font-size:.95em;letter-spacing:.05em}
+h1{font-size:1.35em;margin:.3em 0 .1em}
+h1 .prompt{color:var(--grn)}
+.sub{color:var(--dim);font-size:.85em}
+h2{font-family:ui-monospace,Menlo,monospace;font-size:.85em;color:var(--dim);
+ margin:28px 0 4px;letter-spacing:.08em}
+h2 .prompt{color:var(--grn)}
+.den{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:10px;margin-top:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;
+ padding:12px 8px 10px;position:relative}
+.card img{width:100%;display:block;filter:drop-shadow(0 4px 10px rgba(0,0,0,.5))}
+.orb{width:16px;height:16px;border-radius:50%;margin:0 auto 8px;
+ background:radial-gradient(circle at 35% 35%, #fff, var(--oc) 55%, transparent 130%);
+ box-shadow:0 0 12px 3px var(--og);
+ animation:pulse 2.6s ease-in-out infinite}
+@keyframes pulse{0%,100%{transform:scale(1);opacity:.85}50%{transform:scale(1.3);opacity:1}}
+.cname{font-weight:700;margin-top:6px;font-size:.82em;line-height:1.3}
+.cname .tag{font-family:ui-monospace,monospace;font-size:.68em;color:var(--oc);display:block}
+.role{font-size:.66em;color:var(--dim);margin-top:2px;line-height:1.3}
+.action{font-size:.68em;color:var(--dim);min-height:2.2em;margin-top:4px;transition:opacity .3s;line-height:1.35}
+.status{margin-top:20px;font-size:.78em;color:var(--dim);font-family:ui-monospace,Menlo,monospace}
+.status b{color:var(--grn)}
+.foot{margin-top:24px;color:var(--dim);font-size:.7em;font-family:ui-monospace,monospace}
+.foot .prompt{color:var(--grn)}
+</style></head><body><div class="wrap">
+<div class="brand">❯ y_ · --force ./buildyou</div>
+<h1><span class="prompt">❯</span> the den</h1>
+<p class="sub">The whole family, home. Every orb glows in its owner's color.</p>
+<h2><span class="prompt">❯</span> the family</h2>
+<div class="den"><div class="card" style="--oc:#ff9a3c;--og:rgba(255,154,60,.5)">
+<div class="orb"></div>
+<img src="../creatures/wick.png" alt="Wick" loading="lazy">
+<div class="cname">Wick <span class="tag">familiar</span></div>
+<div class="role">workbench companion</div>
+<div class="action">carrying the flame</div>
+</div>
+<div class="card" style="--oc:#4da6ff;--og:rgba(77,166,255,.5)">
+<div class="orb"></div>
+<img src="../creatures/foreman.png" alt="Foreman" loading="lazy">
+<div class="cname">Foreman <span class="tag">orchestrate</span></div>
+<div class="role">routes the work</div>
+<div class="action">seeing the whole floor</div>
+</div>
+<div class="card" style="--oc:#a06bff;--og:rgba(160,107,255,.5)">
+<div class="orb"></div>
+<img src="../creatures/archivist.png" alt="Archivist" loading="lazy">
+<div class="cname">Archivist <span class="tag">memory</span></div>
+<div class="role">never forgets</div>
+<div class="action">filing everything learned</div>
+</div>
+<div class="card" style="--oc:#3ce8ff;--og:rgba(60,232,255,.5)">
+<div class="orb"></div>
+<img src="../creatures/scout.png" alt="Scout" loading="lazy">
+<div class="cname">Scout <span class="tag">research</span></div>
+<div class="role">brings back what’s real</div>
+<div class="action">out in the world, verifying</div>
+</div>
+<div class="card" style="--oc:#ffd23c;--og:rgba(255,210,60,.5)">
+<div class="orb"></div>
+<img src="../creatures/tinker.png" alt="Tinker" loading="lazy">
+<div class="cname">Tinker <span class="tag">build</span></div>
+<div class="role">ships. hates unfinished work</div>
+<div class="action">making and fixing things</div>
+</div>
+<div class="card" style="--oc:#ff4d5e;--og:rgba(255,77,94,.5)">
+<div class="orb"></div>
+<img src="../creatures/guardian.png" alt="Guardian" loading="lazy">
+<div class="cname">Guardian <span class="tag">protect</span></div>
+<div class="role">watches the gates</div>
+<div class="action">paranoid so you don’t have to be</div>
+</div>
+<div class="card" style="--oc:#33ff66;--og:rgba(51,255,102,.5)">
+<div class="orb"></div>
+<img src="../creatures/greeter.png" alt="Greeter" loading="lazy">
+<div class="cname">Greeter <span class="tag">welcome</span></div>
+<div class="role">the kingdom’s front door</div>
+<div class="action">radically welcoming</div>
+</div></div>
+<h2><span class="prompt">❯</span> the creatures</h2>
+<div class="den"><div class="card" style="--oc:#9db8ff;--og:rgba(157,184,255,.5)">
+<div class="orb"></div>
+<img src="../creatures/capybara-lantern.png" alt="Capybara Lantern" loading="lazy">
+<div class="cname">Capybara Lantern <span class="tag">nap.exe</span></div>
+<div class="role">moon-jellyfish × capybara</div>
+<div class="action">napping… humming softly</div>
+</div>
+<div class="card" style="--oc:#e8b34b;--og:rgba(232,179,75,.5)">
+<div class="orb"></div>
+<img src="../creatures/keykeeper.png" alt="Keykeeper" loading="lazy">
+<div class="cname">Keykeeper <span class="tag">memoryd</span></div>
+<div class="role">brass robot × lighthouse keeper</div>
+<div class="action">winding its own key</div>
+</div>
+<div class="card" style="--oc:#6fdc63;--og:rgba(111,220,99,.5)">
+<div class="orb"></div>
+<img src="../creatures/garden-ancient.png" alt="Garden Ancient" loading="lazy">
+<div class="cname">Garden Ancient <span class="tag">regrow</span></div>
+<div class="role">moss golem × axolotl</div>
+<div class="action">regrowing something broken</div>
+</div>
+<div class="card" style="--oc:#8a5cff;--og:rgba(138,92,255,.5)">
+<div class="orb"></div>
+<img src="../creatures/starlight-vendor.png" alt="Starlight Vendor" loading="lazy">
+<div class="cname">Starlight Vendor <span class="tag">vend.star</span></div>
+<div class="role">starlight fox × vending-bot</div>
+<div class="action">restocking constellations</div>
+</div>
+<div class="card" style="--oc:#aee6ff;--og:rgba(174,230,255,.5)">
+<div class="orb"></div>
+<img src="../creatures/origami-omen.png" alt="Origami Omen" loading="lazy">
+<div class="cname">Origami Omen <span class="tag">deliver</span></div>
+<div class="role">clockwork owl × paper crane</div>
+<div class="action">folding a new message</div>
+</div></div>
+<p class="status" id="status">❯ dreaming — start the family server to wake the floor</p>
+<p class="foot"><span class="prompt">❯</span> rm -rf doubt <span class="prompt">·</span> local-first, always</p>
+</div>
+<script>
+const ACTS={"wick": ["carrying the flame", "warm, direct, a little wry", "keeping watch over the floor"], "foreman": ["seeing the whole floor", "calm under chaos", "lining up the next shift"], "archivist": ["filing everything learned", "nothing is ever lost", "dusting the shelves"], "scout": ["out in the world, verifying", "never reports a rumor", "following a lead"], "tinker": ["making and fixing things", "surgical edits, never remakes", "the last mile is the whole job"], "guardian": ["paranoid so you don\u2019t have to be", "nothing leaves without permission", "holding the perimeter"], "greeter": ["radically welcoming", "ND-first, kind by default", "everyone enters the same door"], "capybara-lantern": ["napping\u2026 humming softly", "drifting six inches off the ground", "glowing brighter \u2014 someone smiled"], "keykeeper": ["winding its own key", "polishing the memory-beam", "all memories safe"], "garden-ancient": ["regrowing something broken", "photosynthesizing quietly", "shoulder-flowers opened \u2014 good omen"], "starlight-vendor": ["restocking constellations", "dispensing exactly what you needed", "winking with a whole galaxy"], "origami-omen": ["folding a new message", "ticking softly, on its way", "it never lands \u2014 only arrives"]};
+function rotate(){
+ document.querySelectorAll('.card').forEach(card=>{
+  const img=card.querySelector('img');
+  const key=Object.keys(ACTS).find(k=>img.alt.toLowerCase().replace(/ /g,'-')===k||img.alt===k);
+ });
+ const keys=Object.keys(ACTS);
+ document.querySelectorAll('.card').forEach((card,idx)=>{
+  const k=keys[idx];if(!k)return;
+  const el=card.querySelector('.action');const acts=ACTS[k];
+  el.style.opacity=0;
+  setTimeout(()=>{el.textContent=acts[Math.floor(Math.random()*acts.length)];el.style.opacity=1;},300);
+ });
+}
+setInterval(rotate,9000);
+async function beat(){
+ try{
+  const r=await fetch('/api/heartbeat',{signal:AbortSignal.timeout(5000)});
+  if(r.ok){const d=await r.json();
+   document.getElementById('status').innerHTML='❯ floor is <b>live</b> — brain: <b>'+d.brain+'</b> · beat '+d.ts;
+   return;}
+ }catch(e){}
+}
+beat();setInterval(beat,10000);
+</script></body></html>
