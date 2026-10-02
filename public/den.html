@@ -208,7 +208,7 @@ async function go(){
  log.innerHTML+='<div class="u">you: '+q.replace(/</g,'&lt;')+'</div>';
  document.getElementById('chatq').value='';
  let r='...';
- try{const res=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({q})});const j=await res.json();r=j.reply||'hmm.';}catch(e){r='the brain is offline right now, but I heard you.';}
+ try{const res=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:q})});const j=await res.json();r=j.answer||j.reply||'hmm.';}catch(e){r='the brain is offline right now, but I heard you.';}
  log.innerHTML+='<div class="b"><b>greeter:</b> '+r.replace(/</g,'&lt;')+'</div>';
  log.scrollTop=log.scrollHeight;
 }

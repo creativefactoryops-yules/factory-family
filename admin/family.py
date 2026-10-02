@@ -201,7 +201,7 @@ class H(http.server.BaseHTTPRequestHandler):
             log(data.get("member", "wick"), "note", data.get("text", ""))
             return self._send(200, '{"ok": true}')
         if self.path == "/api/chat":
-            q = data.get("text", "").strip()
+            q = data.get("text", data.get("q", "")).strip()
             if not q:
                 return self._send(200, json.dumps({"answer": "Say something first — I'm listening.", "layer": "none"}))
             if brain_ask:
@@ -209,7 +209,7 @@ class H(http.server.BaseHTTPRequestHandler):
             else:
                 answer, layer = "The brain isn't wired up yet.", "none"
             log("greeter", f"chat:{layer}", q[:120])
-            return self._send(200, json.dumps({"answer": answer, "layer": layer}))
+            return self._send(200, json.dumps({"answer": answer, "reply": answer, "layer": layer}))
         if self.path == "/api/tinker/deploy":
             # Tinker: deploy straight from the family floor.
             # {target: "netlify"|"github", site|repo, src}
