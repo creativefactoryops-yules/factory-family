@@ -146,7 +146,7 @@ button:active{transform:scale(.96)}
 <p class="foot"><span class="prompt">❯</span> rm -rf doubt <span class="prompt">·</span> local-first, always</p>
 </div>
 <script>
-const ACTS={"wick": ["carrying the flame", "warm, direct, a little wry", "keeping watch over the floor"], "foreman": ["seeing the whole floor", "calm under chaos", "lining up the next shift"], "archivist": ["filing everything learned", "nothing is ever lost", "dusting the shelves"], "scout": ["out in the world, verifying", "never reports a rumor", "following a lead"], "tinker": ["making and fixing things", "surgical edits, never remakes", "the last mile is the whole job"], "guardian": ["paranoid so you don\u2019t have to be", "nothing leaves without permission", "holding the perimeter"], "greeter": ["radically welcoming", "ND-first, kind by default", "everyone enters the same door"], "capybara-lantern": ["napping\u2026 humming softly", "drifting six inches off the ground", "glowing brighter \u2014 someone smiled"], "keykeeper": ["winding its own key", "polishing the memory-beam", "all memories safe"], "garden-ancient": ["regrowing something broken", "photosynthesizing quietly", "shoulder-flowers opened \u2014 good omen"], "starlight-vendor": ["restocking constellations", "dispensing exactly what you needed", "winking with a whole galaxy"], "origami-omen": ["folding a new message", "ticking softly, on its way", "it never lands \u2014 only arrives"]};
+const ACTS={"wick": ["carrying the flame", "warm, direct, a little wry", "keeping watch over the floor"], "foreman": ["seeing the whole floor", "calm under chaos", "lining up the next shift"], "archivist": ["filing everything learned", "nothing is ever lost", "dusting the shelves"], "scout": ["out in the world, verifying", "never reports a rumor", "following a lead"], "tinker": ["making and fixing things", "surgical edits, never remakes", "the last mile is the whole job"], "guardian": ["paranoid so you don’t have to be", "nothing leaves without permission", "holding the perimeter"], "greeter": ["radically welcoming", "ND-first, kind by default", "everyone enters the same door"], "capybara-lantern": ["napping\u2026 humming softly", "drifting six inches off the ground", "glowing brighter — someone smiled"], "keykeeper": ["winding its own key", "polishing the memory-beam", "all memories safe"], "garden-ancient": ["regrowing something broken", "photosynthesizing quietly", "shoulder-flowers opened — good omen"], "starlight-vendor": ["restocking constellations", "dispensing exactly what you needed", "winking with a whole galaxy"], "origami-omen": ["folding a new message", "ticking softly, on its way", "it never lands — only arrives"]};
 function rotate(){
  document.querySelectorAll('.card').forEach(card=>{
   const img=card.querySelector('img');
@@ -187,7 +187,7 @@ document.querySelectorAll('.card').forEach(card=>{
 
 <div class="chatbox">
 <h2 style="color:var(--grn)">talk to the family</h2>
-<div id="chatlog"><div class="b"><b>greeter:</b> hey. everyone\u2019s home. what\u2019s up?</div></div>
+<div id="chatlog"><div class="b"><b>greeter:</b> hey. everyone’s home. what’s up?</div></div>
 <div class="chatrow"><input id="chatq" placeholder="say something..."><button onclick="go()">send</button></div>
 </div>
 
@@ -196,7 +196,7 @@ document.querySelectorAll('.card').forEach(card=>{
 <h3 style="color:var(--grn)">leave a note</h3>
 <textarea id="note" class="note" rows="2" placeholder="note for the family..."></textarea><br><br>
 <button onclick="savenote()">pin note</button>
-<h3 style="color:var(--grn)">tinker \u2014 deploy</h3>
+<h3 style="color:var(--grn)">tinker — deploy</h3>
 <div class="chatrow"><input id="depapp" class="note" style="flex:1" placeholder="app name"><input id="depdir" class="note" style="flex:2" placeholder="folder path"><button onclick="dep()">deploy</button></div>
 <div id="depres" style="color:var(--dim);font-size:.8em;margin-top:8px"></div>
 </details>
