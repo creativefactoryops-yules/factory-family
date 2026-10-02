@@ -163,7 +163,7 @@ def route(q):
     if mentioned:
         return mentioned
     # "everyone / all of you / each of you" -> the whole team
-    if re.search(r"\b(everyone|all of you|each of you|whole team|everybody)\b", ql):
+    if re.search(r"\b(everyone|all of you|each of you|whole team|everybody|hey team|hi team|hello team)\b", ql):
         return ["wick", "foreman", "archivist", "scout", "tinker", "guardian", "greeter"]
     for member, pat in ROUTER:
         if re.search(pat, ql):
@@ -205,18 +205,62 @@ def member_ask(member, soul, history, q, model_offset=0):
 
 
 def team_ask(q, souls, history):
-    """Route to the right members, gather replies. Returns [(member, reply)]."""
+    """One Gemini call speaks as the whole routed team — 1 API call no matter
+    how many members answer, so the free tier never 429s."""
     members = route(q)
-    nmodels = max(len(gemini_models()), 1)
-    out = []
-    def _one(arg):
-        m, i = arg
-        r = member_ask(m, souls.get(m, ""), history, q, model_offset=i % nmodels)
-        return (m, r)
-    with ThreadPoolExecutor(max_workers=min(len(members), 7)) as ex:
-        for m, r in ex.map(_one, [(m, i) for i, m in enumerate(members)]):
-            out.append((m, r or _offline_line(m, q)))
-    return out
+    key = gemini_key()
+    if not key:
+        return [(m, _offline_line(m, q)) for m in members]
+    model = gemini_models()[0]
+    soul_text = "\n\n".join(f"## {m}\n{souls.get(m, '')}" for m in members)
+    convo = "\n".join(history[-8:]) if history else ""
+    fmt = "\n".join(f"[{m}] <2-3 sentences as {m}>" for m in members)
+    prompt = (
+        f"You are the factory family, Yules's team of AI helpers. Their souls:\n\n"
+        f"{soul_text}\n\nRecent chat:\n{convo}\n\nYules: {q}\n\n"
+        f"Answer as EACH of these members: {', '.join(members)}. "
+        f"Format exactly like this, one block per member:\n{fmt}\n"
+        f"Keep every voice true to its soul. No extra commentary outside the blocks."
+    )
+    text = None
+    for wait in (1, 2, 4, 8):
+        url = (f"https://generativelanguage.googleapis.com/v1beta/models/"
+               f"{model}:generateContent?key={key}")
+        data, err = _post(url, {"contents": [{"parts": [{"text": prompt}]}]}, timeout=60)
+        if data:
+            try:
+                text = data["candidates"][0]["content"]["parts"][0]["text"]
+                break
+            except (KeyError, IndexError, TypeError) as e:
+                print(f"[brain] team: bad response shape: {e}", flush=True)
+                break
+        if err in (429, 503):
+            print(f"[brain] team: {model} got {err}, retry in {wait}s", flush=True)
+            time.sleep(wait)
+            continue
+        print(f"[brain] team: {model} failed: {err}", flush=True)
+        break
+    if not text:
+        return [(m, _offline_line(m, q)) for m in members]
+    # parse [member] blocks
+    out, current, buf = [], None, []
+    for line in text.split("\n"):
+        m = re.match(r"\[([a-z]+)\]\s*(.*)", line.strip(), re.I)
+        if m and m.group(1).lower() in members:
+            if current:
+                out.append((current, "\n".join(buf).strip()))
+            current, buf = m.group(1).lower(), [m.group(2)]
+        elif current:
+            buf.append(line)
+    if current:
+        out.append((current, "\n".join(buf).strip()))
+    # keep routed order, fill any missing with offline line
+    got = {m for m, _ in out}
+    ordered = [p for m in members for p in out if p[0] == m]
+    for m in members:
+        if m not in got:
+            ordered.append((m, _offline_line(m, q)))
+    return ordered
 
 
 def _offline_line(member, q):
