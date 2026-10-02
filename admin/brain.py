@@ -187,12 +187,16 @@ def member_ask(member, soul, history, q):
             if data:
                 try:
                     return data["candidates"][0]["content"]["parts"][0]["text"].strip()
-                except (KeyError, IndexError, TypeError):
+                except (KeyError, IndexError, TypeError) as e:
+                    print(f"[brain] {member}: bad response shape: {e}", flush=True)
                     break
-            if err in (429, 503):
+            elif err not in (429, 503):
+                print(f"[brain] {member}: gemini {model} failed: {err}", flush=True)
+                break
+            else:
+                print(f"[brain] {member}: gemini {model} got {err}, retrying in {wait}s", flush=True)
                 time.sleep(wait)
                 continue
-            break
     # offline fallback: short in-character shrug
     return None
 
