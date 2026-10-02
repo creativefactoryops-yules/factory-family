@@ -38,6 +38,19 @@ h2 .prompt{color:var(--grn)}
 .status b{color:var(--grn)}
 .foot{margin-top:24px;color:var(--dim);font-size:.7em;font-family:ui-monospace,monospace}
 .foot .prompt{color:var(--grn)}
+details{background:#14100a;border:1px solid #3a2f1d;border-radius:10px;padding:10px 14px;margin:14px auto;max-width:860px;text-align:left}
+summary{cursor:pointer;font-weight:700;color:var(--grn)}
+.chatbox{background:#14100a;border:1px solid #3a2f1d;border-radius:10px;padding:14px;margin:14px auto;max-width:860px;text-align:left}
+#chatlog{max-height:260px;overflow-y:auto;margin-bottom:10px;font-size:.85em}
+#chatlog .u{color:var(--grn);margin:6px 0}
+#chatlog .b{color:var(--dim);margin:6px 0 6px 12px}
+#chatlog .b b{color:var(--org)}
+.chatrow{display:flex;gap:8px}
+#chatq{flex:1;background:#0a0906;border:1px solid #3a2f1d;color:var(--txt);border-radius:8px;padding:10px;font-size:1em}
+button{background:var(--org);color:#0a0906;border:none;border-radius:8px;padding:10px 18px;font-weight:700;cursor:pointer;font-size:1em}
+button:active{transform:scale(.96)}
+.card pre{white-space:pre-wrap;font-size:.72em;color:var(--dim);max-height:120px;overflow:hidden}
+.note{width:100%;background:#0a0906;border:1px solid #3a2f1d;color:var(--txt);border-radius:8px;padding:10px;box-sizing:border-box}
 </style></head><body><div class="wrap">
 <div class="brand">❯ y_ · --force ./buildyou</div>
 <h1><span class="prompt">❯</span> the den</h1>
@@ -170,5 +183,55 @@ document.querySelectorAll('.card').forEach(card=>{
   setTimeout(()=>{act.textContent=orig;},1600);
  });
 });
+</script>
+
+<div class="chatbox">
+<h2 style="color:var(--grn)">talk to the family</h2>
+<div id="chatlog"><div class="b"><b>greeter:</b> hey. everyone\u2019s home. what\u2019s up?</div></div>
+<div class="chatrow"><input id="chatq" placeholder="say something..."><button onclick="go()">send</button></div>
+</div>
+
+<details><summary>the floor (admin)</summary>
+<div id="floor"><p style="color:var(--dim)">loading...</p></div>
+<h3 style="color:var(--grn)">leave a note</h3>
+<textarea id="note" class="note" rows="2" placeholder="note for the family..."></textarea><br><br>
+<button onclick="savenote()">pin note</button>
+<h3 style="color:var(--grn)">tinker \u2014 deploy</h3>
+<div class="chatrow"><input id="depapp" class="note" style="flex:1" placeholder="app name"><input id="depdir" class="note" style="flex:2" placeholder="folder path"><button onclick="dep()">deploy</button></div>
+<div id="depres" style="color:var(--dim);font-size:.8em;margin-top:8px"></div>
+</details>
+
+<script>
+async function go(){
+ const q=document.getElementById('chatq').value.trim();if(!q)return;
+ const log=document.getElementById('chatlog');
+ log.innerHTML+='<div class="u">you: '+q.replace(/</g,'&lt;')+'</div>';
+ document.getElementById('chatq').value='';
+ let r='...';
+ try{const res=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({q})});const j=await res.json();r=j.reply||'hmm.';}catch(e){r='the brain is offline right now, but I heard you.';}
+ log.innerHTML+='<div class="b"><b>greeter:</b> '+r.replace(/</g,'&lt;')+'</div>';
+ log.scrollTop=log.scrollHeight;
+}
+document.getElementById('chatq').addEventListener('keydown',e=>{if(e.key==='Enter')go();});
+async function savenote(){
+ const t=document.getElementById('note').value.trim();if(!t)return;
+ await fetch('/api/note',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:t})});
+ document.getElementById('note').value='';loadfloor();
+}
+async function dep(){
+ const app=document.getElementById('depapp').value,dir=document.getElementById('depdir').value;
+ const j=await(await fetch('/api/deploy',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({app,dir})})).json();
+ document.getElementById('depres').textContent=JSON.stringify(j).slice(0,300);
+ loadfloor();
+}
+async function loadfloor(){
+ const m=await(await fetch('/api/members')).json();
+ const l=await(await fetch('/api/log')).json();
+ document.getElementById('floor').innerHTML=
+  '<h3 style="color:var(--grn)">members</h3>'+
+  m.map(x=>{const img=(window.FAMIMG&&window.FAMIMG[x.name])?'<img src="'+window.FAMIMG[x.name]+'" style="width:56px;float:right;margin-left:10px">':'';return '<div class="card" style="text-align:left">'+img+'<b style="color:var(--org)">'+x.name+'</b><pre>'+x.soul.slice(0,400)+'</pre><div style="clear:both"></div></div>';}).join('')+
+  '<h3 style="color:var(--grn)">heartbeat log</h3><pre style="color:var(--dim);font-size:.75em">'+l.slice(-15).map(e=>e.ts+' '+e.event).join('\n')+'</pre>';
+}
+loadfloor();
 </script>
 </body></html>

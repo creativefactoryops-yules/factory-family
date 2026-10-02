@@ -6,7 +6,7 @@ pkill -f "admin/family.py" 2>/dev/null
 nohup python3 admin/family.py > family.log 2>&1 &
 sleep 3
 if command -v termux-open-url >/dev/null 2>&1; then
-  termux-open-url http://127.0.0.1:8471/den
+  termux-open-url http://127.0.0.1:8471/
 else
-  echo "open http://127.0.0.1:8471/den"
+  echo "open http://127.0.0.1:8471/"
 fi

@@ -121,14 +121,14 @@ class H(http.server.BaseHTTPRequestHandler):
         self.wfile.write(b)
 
     def do_GET(self):
-        if self.path == "/":
+        if self.path == "/floor":
             return self._send(200, ADMIN_HTML, "text/html")
         if self.path == "/greeter":
             p = os.path.join(BASE, "public", "greeter.html")
             if os.path.exists(p):
                 return self._send(200, open(p).read(), "text/html")
             return self._send(404, "greeter not built yet", "text/plain")
-        if self.path == "/den":
+        if self.path in ("/", "/den"):
             p = os.path.join(BASE, "public", "den.html")
             if os.path.exists(p):
                 html = open(p).read()
