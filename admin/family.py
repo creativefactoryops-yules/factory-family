@@ -131,7 +131,23 @@ class H(http.server.BaseHTTPRequestHandler):
         if self.path == "/den":
             p = os.path.join(BASE, "public", "den.html")
             if os.path.exists(p):
-                return self._send(200, open(p).read(), "text/html")
+                html = open(p).read()
+                # Bake portraits server-side: no browser JS chain to break.
+                try:
+                    import re as _re
+                    famimg = {}
+                    pub = os.path.join(BASE, "public")
+                    for n in range(1, 7):
+                        fp = os.path.join(pub, f"img{n}.js")
+                        if os.path.exists(fp):
+                            for m in _re.finditer(r'window\.FAMIMG\["([^"]+)"\] = "(data:image/png;base64,[^"]+)"', open(fp).read()):
+                                famimg[m.group(1)] = m.group(2)
+                    def _fill(mo):
+                        return f'<img src="{famimg[mo.group(1)]}"' if mo.group(1) in famimg else "<img"
+                    html = _re.sub(r'<img data-fam="([^"]+)" src=""', _fill, html)
+                except Exception:
+                    pass
+                return self._send(200, html, "text/html")
             return self._send(404, "den not built yet", "text/plain")
         if self.path.startswith("/img") and self.path.endswith(".js"):
             name = os.path.basename(self.path)
@@ -228,6 +244,12 @@ input,button{background:#111;color:#3f6;border:1px solid #1f5c2e;padding:8px;fon
 </style></head><body>
 <h1>❯ y_ · factory floor — admin</h1>
 <p>local only. the family, the souls, the log.</p>
+<script src="/img1.js"></script>
+<script src="/img2.js"></script>
+<script src="/img3.js"></script>
+<script src="/img4.js"></script>
+<script src="/img5.js"></script>
+<script src="/img6.js"></script>
 <h2>members</h2><div id="members"></div>
 <h2>log</h2><div id="log"></div>
 <h2>tinker — ship it</h2>
@@ -243,8 +265,10 @@ input,button{background:#111;color:#3f6;border:1px solid #1f5c2e;padding:8px;fon
 <script>
 async function load(){
  const m=await(await fetch('/api/members')).json();
- document.getElementById('members').innerHTML=m.map(x=>
-  `<div class="card"><span class="mname">${x.name}</span><pre>${x.soul}</pre></div>`).join('');
+ document.getElementById('members').innerHTML=m.map(x=>{
+  const img=(window.FAMIMG&&window.FAMIMG[x.name])?`<img src="${window.FAMIMG[x.name]}" alt="${x.name}" style="width:72px;float:right;margin:0 0 8px 12px;filter:drop-shadow(0 4px 10px rgba(0,0,0,.5))">`:'';
+  return `<div class="card"><span class="mname">${x.name}</span>${img}<pre>${x.soul}</pre><div style="clear:both"></div></div>`;
+ }).join('');
  const l=await(await fetch('/api/log')).json();
  document.getElementById('log').innerHTML=l.map(x=>
   `<div class="logline">[${x.ts}] <b>${x.member}</b> (${x.kind}): ${x.text}</div>`).join('')||'<p>quiet on the floor.</p>';
