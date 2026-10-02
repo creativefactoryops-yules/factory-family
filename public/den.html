@@ -40,49 +40,49 @@ h2 .prompt{color:var(--grn)}
 <h2><span class="prompt">❯</span> the family</h2>
 <div class="den"><div class="card" style="--oc:#ff9a3c;--og:rgba(255,154,60,.5)">
 <div class="orb"></div>
-<img src="../creatures/wick.png" alt="Wick" loading="lazy">
+<img data-fam="wick" src="" alt="Wick" loading="lazy">
 <div class="cname">Wick <span class="tag">familiar</span></div>
 <div class="role">workbench companion</div>
 <div class="action">carrying the flame</div>
 </div>
 <div class="card" style="--oc:#4da6ff;--og:rgba(77,166,255,.5)">
 <div class="orb"></div>
-<img src="../creatures/foreman.png" alt="Foreman" loading="lazy">
+<img data-fam="foreman" src="" alt="Foreman" loading="lazy">
 <div class="cname">Foreman <span class="tag">orchestrate</span></div>
 <div class="role">routes the work</div>
 <div class="action">seeing the whole floor</div>
 </div>
 <div class="card" style="--oc:#a06bff;--og:rgba(160,107,255,.5)">
 <div class="orb"></div>
-<img src="../creatures/archivist.png" alt="Archivist" loading="lazy">
+<img data-fam="archivist" src="" alt="Archivist" loading="lazy">
 <div class="cname">Archivist <span class="tag">memory</span></div>
 <div class="role">never forgets</div>
 <div class="action">filing everything learned</div>
 </div>
 <div class="card" style="--oc:#3ce8ff;--og:rgba(60,232,255,.5)">
 <div class="orb"></div>
-<img src="../creatures/scout.png" alt="Scout" loading="lazy">
+<img data-fam="scout" src="" alt="Scout" loading="lazy">
 <div class="cname">Scout <span class="tag">research</span></div>
 <div class="role">brings back what’s real</div>
 <div class="action">out in the world, verifying</div>
 </div>
 <div class="card" style="--oc:#ffd23c;--og:rgba(255,210,60,.5)">
 <div class="orb"></div>
-<img src="../creatures/tinker.png" alt="Tinker" loading="lazy">
+<img data-fam="tinker" src="" alt="Tinker" loading="lazy">
 <div class="cname">Tinker <span class="tag">build</span></div>
 <div class="role">ships. hates unfinished work</div>
 <div class="action">making and fixing things</div>
 </div>
 <div class="card" style="--oc:#ff4d5e;--og:rgba(255,77,94,.5)">
 <div class="orb"></div>
-<img src="../creatures/guardian.png" alt="Guardian" loading="lazy">
+<img data-fam="guardian" src="" alt="Guardian" loading="lazy">
 <div class="cname">Guardian <span class="tag">protect</span></div>
 <div class="role">watches the gates</div>
 <div class="action">paranoid so you don’t have to be</div>
 </div>
 <div class="card" style="--oc:#33ff66;--og:rgba(51,255,102,.5)">
 <div class="orb"></div>
-<img src="../creatures/greeter.png" alt="Greeter" loading="lazy">
+<img data-fam="greeter" src="" alt="Greeter" loading="lazy">
 <div class="cname">Greeter <span class="tag">welcome</span></div>
 <div class="role">the kingdom’s front door</div>
 <div class="action">radically welcoming</div>
@@ -90,35 +90,35 @@ h2 .prompt{color:var(--grn)}
 <h2><span class="prompt">❯</span> the creatures</h2>
 <div class="den"><div class="card" style="--oc:#9db8ff;--og:rgba(157,184,255,.5)">
 <div class="orb"></div>
-<img src="../creatures/capybara-lantern.png" alt="Capybara Lantern" loading="lazy">
+<img data-fam="capybara-lantern" src="" alt="Capybara Lantern" loading="lazy">
 <div class="cname">Capybara Lantern <span class="tag">nap.exe</span></div>
 <div class="role">moon-jellyfish × capybara</div>
 <div class="action">napping… humming softly</div>
 </div>
 <div class="card" style="--oc:#e8b34b;--og:rgba(232,179,75,.5)">
 <div class="orb"></div>
-<img src="../creatures/keykeeper.png" alt="Keykeeper" loading="lazy">
+<img data-fam="keykeeper" src="" alt="Keykeeper" loading="lazy">
 <div class="cname">Keykeeper <span class="tag">memoryd</span></div>
 <div class="role">brass robot × lighthouse keeper</div>
 <div class="action">winding its own key</div>
 </div>
 <div class="card" style="--oc:#6fdc63;--og:rgba(111,220,99,.5)">
 <div class="orb"></div>
-<img src="../creatures/garden-ancient.png" alt="Garden Ancient" loading="lazy">
+<img data-fam="garden-ancient" src="" alt="Garden Ancient" loading="lazy">
 <div class="cname">Garden Ancient <span class="tag">regrow</span></div>
 <div class="role">moss golem × axolotl</div>
 <div class="action">regrowing something broken</div>
 </div>
 <div class="card" style="--oc:#8a5cff;--og:rgba(138,92,255,.5)">
 <div class="orb"></div>
-<img src="../creatures/starlight-vendor.png" alt="Starlight Vendor" loading="lazy">
+<img data-fam="starlight-vendor" src="" alt="Starlight Vendor" loading="lazy">
 <div class="cname">Starlight Vendor <span class="tag">vend.star</span></div>
 <div class="role">starlight fox × vending-bot</div>
 <div class="action">restocking constellations</div>
 </div>
 <div class="card" style="--oc:#aee6ff;--og:rgba(174,230,255,.5)">
 <div class="orb"></div>
-<img src="../creatures/origami-omen.png" alt="Origami Omen" loading="lazy">
+<img data-fam="origami-omen" src="" alt="Origami Omen" loading="lazy">
 <div class="cname">Origami Omen <span class="tag">deliver</span></div>
 <div class="role">clockwork owl × paper crane</div>
 <div class="action">folding a new message</div>
@@ -157,4 +157,10 @@ async function beat(){
  }catch(e){}
 }
 beat();setInterval(beat,10000);
-</script></body></html>
+</script><script>
+document.querySelectorAll('img[data-fam]').forEach(img=>{
+ const k=img.getAttribute('data-fam');
+ if(window.FAMIMG&&window.FAMIMG[k])img.src=window.FAMIMG[k];
+});
+</script>
+</body></html>
