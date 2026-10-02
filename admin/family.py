@@ -172,7 +172,7 @@ class H(http.server.BaseHTTPRequestHandler):
             layer = "keyword"
             try:
                 import brain as _b
-                if _b.GEMINI_KEY:
+                if _b.gemini_key():
                     layer = "gemini"
                 else:
                     import urllib.request as _u

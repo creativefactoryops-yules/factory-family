@@ -1,20 +1,50 @@
 """Greeter brain — three layers, best to worst.
-1. Gemini (online, smart)   — needs GEMINI_API_KEY env; chains models so quota
-                              never kills it: flash (~20/day) -> flash-lite (~500/day)
-                              -> gemma (~14k/day). Override with GEMINI_MODELS env.
+1. Gemini (online, smart) — key auto-loaded from ~/assistant-bot/.env (the working
+   Telegram bot key — never asks Yules to retype it). Chains models on quota errors,
+   with exponential backoff (1s, 2s, 4s) for 503/429, same as the Telegram bot.
 2. Local Llama via Ollama   — needs ollama running; model via OLLAMA_MODEL env
 3. Keyword brain             — never dies, always answers
 Returns (answer, layer_name). Layer 1 failure falls through silently.
 """
-import json, os, re, urllib.request
+import json, os, re, time, urllib.request, urllib.error
 
-GEMINI_KEY = os.environ.get("GEMINI_API_KEY", "")
-# Free-tier daily budgets (per model): flash ~20/day, lite ~500/day, gemma ~14k/day.
-# Chain them best-to-cheapest so one model's quota never kills the brain.
-GEMINI_MODELS = os.environ.get(
-    "GEMINI_MODELS",
-    "gemini-3.8-flash,gemini-3.5-flash-lite,gemma-4-26b-a4b-it",
-).split(",")
+
+def _load_dotenv(path):
+    """Stdlib .env parser — KEY=value, strips quotes, skips comments/blank lines."""
+    try:
+        with open(path) as f:
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith("#") or "=" not in line:
+                    continue
+                k, v = line.split("=", 1)
+                k, v = k.strip(), v.strip()
+                if len(v) >= 2 and v[0] == v[-1] and v[0] in ("'", '"'):
+                    v = v[1:-1]
+                os.environ.setdefault(k, v)
+    except OSError:
+        pass
+
+
+# Yules's Telegram assistant keeps its working Gemini key here — reuse it.
+_load_dotenv(os.path.expanduser("~/assistant-bot/.env"))
+
+
+def gemini_key():
+    return os.environ.get("GEMINI_API_KEY", "")
+
+
+def gemini_models():
+    # GEMINI_MODEL (single, like the Telegram bot) wins; otherwise the chain.
+    single = os.environ.get("GEMINI_MODEL", "").strip()
+    if single:
+        return [single]
+    return [m.strip() for m in os.environ.get(
+        "GEMINI_MODELS",
+        "gemini-3.8-flash,gemini-3.5-flash-lite,gemma-4-26b-a4b-it",
+    ).split(",") if m.strip()]
+
+
 OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "qwen2.5:1.5b-instruct")
 
 SYSTEM = (
@@ -25,38 +55,50 @@ SYSTEM = (
     "Keep replies short, 2-4 sentences. Warm, direct, a little playful."
 )
 
+
 def _post(url, payload, timeout=25):
     r = urllib.request.Request(url, data=json.dumps(payload).encode(),
                                headers={"Content-Type": "application/json"})
-    with urllib.request.urlopen(r, timeout=timeout) as resp:
-        return json.load(resp)
+    try:
+        with urllib.request.urlopen(r, timeout=timeout) as resp:
+            return json.load(resp), None
+    except urllib.error.HTTPError as e:
+        return None, e.code
+    except Exception as e:
+        return None, str(e)
+
 
 def gemini_ask(q):
-    """Try each Gemini model in order; a 429/quota error falls to the next model."""
-    if not GEMINI_KEY:
+    """Try each model in order; 503/429 gets exponential backoff (1s,2s,4s)."""
+    key = gemini_key()
+    if not key:
         return None
-    last = None
-    for model in GEMINI_MODELS:
-        model = model.strip()
-        if not model:
-            continue
-        try:
+    for model in gemini_models():
+        for wait in (1, 2, 4):
             url = (f"https://generativelanguage.googleapis.com/v1beta/models/"
-                   f"{model}:generateContent?key={GEMINI_KEY}")
-            d = _post(url, {"system_instruction": {"parts": [{"text": SYSTEM}]},
-                            "contents": [{"parts": [{"text": q}]}]})
-            return d["candidates"][0]["content"]["parts"][0]["text"].strip()
-        except Exception as e:
-            last = e
-            continue
-    # every model exhausted — let the outer chain fall through to llama
+                   f"{model}:generateContent?key={key}")
+            data, err = _post(url, {"system_instruction": {"parts": [{"text": SYSTEM}]},
+                                    "contents": [{"parts": [{"text": q}]}]})
+            if data:
+                try:
+                    return data["candidates"][0]["content"]["parts"][0]["text"].strip()
+                except (KeyError, IndexError, TypeError):
+                    break  # malformed — try next model
+            if err in (429, 503):
+                time.sleep(wait)
+                continue
+            break  # other error (bad model name, auth) — next model
     return None
 
+
 def llama_ask(q):
-    d = _post("http://127.0.0.1:11434/api/generate",
-              {"model": OLLAMA_MODEL, "prompt": f"{SYSTEM}\n\nVisitor: {q}\nGreeter:",
-               "stream": False}, timeout=60)
-    return d.get("response", "").strip()
+    d, _ = _post("http://127.0.0.1:11434/api/generate",
+                 {"model": OLLAMA_MODEL, "prompt": f"{SYSTEM}\n\nVisitor: {q}\nGreeter:",
+                  "stream": False}, timeout=60)
+    if d:
+        return (d.get("response") or "").strip()
+    return None
+
 
 KEYWORDS = [
     (r"^(hi|hello|hey|yo|sup)\b",
@@ -77,6 +119,7 @@ KEYWORDS = [
      "See you soon. The door stays open."),
 ]
 
+
 def keyword_ask(q):
     q = q.strip()
     for pat, ans in KEYWORDS:
@@ -84,6 +127,7 @@ def keyword_ask(q):
             return ans
     return ("Good question — I don't have a real answer for that yet, and I'd rather say so "
             "than fake one. Want to tell me more about what you're after? We'll figure it out together.")
+
 
 def ask(q):
     """Try each layer in order. Never raises on model failure."""
