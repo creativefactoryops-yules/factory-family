@@ -154,6 +154,11 @@ ROUTER = [
     ("greeter",   r"^(hi|hello|hey|yo|sup)\b"),
 ]
 
+STATUS_Q = re.compile(
+    r"ship|ready|status|build|deploy|done|finished|progress|stuck|"
+    r"left to do|remaining|what'?s (new|changed|going on)", re.I)
+
+
 def route(q):
     """Who should answer? Returns list of member names."""
     ql = q.lower()
@@ -211,6 +216,16 @@ def team_ask(q, souls, history):
     key = gemini_key()
     if not key:
         return [(m, _offline_line(m, q)) for m in members]
+    # --- Tinker's eyes: real state for build/status questions ---
+    # The backend checks the machine itself and injects the facts into the
+    # prompt. Tinker reports them; it cannot invent what isn't there.
+    eyes_report = ""
+    if "tinker" in members and STATUS_Q.search(q):
+        try:
+            import eyes as _eyes
+            eyes_report = _eyes.tinker_eyes(q)
+        except Exception as e:
+            eyes_report = "(eyes module failed: %s)" % e
     model = gemini_models()[0]
     soul_text = "\n\n".join(f"## {m}\n{souls.get(m, '')}" for m in members)
     convo = "\n".join(history[-8:]) if history else ""
@@ -222,6 +237,14 @@ def team_ask(q, souls, history):
         f"Format exactly like this, one block per member:\n{fmt}\n"
         f"Keep every voice true to its soul. No extra commentary outside the blocks."
     )
+    if eyes_report:
+        prompt += (
+            "\n\nREAL STATE — checked live on Yules's machine seconds ago, "
+            "by the backend, not by any member. Tinker: your block MUST report "
+            "only these facts. Never invent builds, commits, test results, or "
+            "deploys beyond what is written here. If something isn't covered, "
+            "say you can't see it:\n" + eyes_report + "\n"
+        )
     text = None
     for wait in (1, 2, 4, 8):
         url = (f"https://generativelanguage.googleapis.com/v1beta/models/"
